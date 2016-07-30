@@ -1,0 +1,10 @@
+language: go
+
+go:
+  - 1.6
+
+script:
+    - go test -v
+
+after_script:
+    email:whaibin01@126.com
