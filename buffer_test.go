@@ -86,6 +86,15 @@ func TestBuffer(t *testing.T) {
 			So(b.GetPosition(), ShouldEqual, uint64(len(src)+8))
 			So(b.Len(), ShouldEqual, uint64(len(src)+8))
 		})
+		Convey("Check Write & Get Bytes.", func() {
+			bytes := []byte{1, 2, 3, 4, 5}
+			b.WriteBytes(bytes)
+			bs := b.GetBytes()
+			So(len(bs), ShouldEqual, len(bytes))
+			for i, _ := range bs {
+				So(bs[i], ShouldEqual, bytes[i])
+			}
+		})
 		Convey("Check Write & Read All Types.", func() {
 			b.WriteBool(true)
 			b.WriteInt32(123)

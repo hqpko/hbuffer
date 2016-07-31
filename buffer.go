@@ -96,6 +96,13 @@ func (b *Buffer) WriteFloat64(f float64) {
 	b.position += 8
 }
 
+func (b *Buffer) WriteBytes(bytes []byte) {
+	l := uint64(len(bytes))
+	b.grow(l)
+	copy(b.buf[b.position:], bytes)
+	b.position += l
+}
+
 func (b *Buffer) WriteBool(boo bool) {
 	if b.Available() < 1 {
 		b.grow(1)
@@ -205,6 +212,10 @@ func (b *Buffer) CopyBytes(size uint64) ([]byte, error) {
 	copy(bs, b.buf[b.position:b.position+size])
 	b.position += size
 	return bs, nil
+}
+
+func (b *Buffer) GetBytes() []byte {
+	return b.buf
 }
 
 func (b *Buffer) grow(n uint64) uint64 {
