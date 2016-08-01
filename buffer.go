@@ -215,7 +215,7 @@ func (b *Buffer) CopyBytes(size uint64) ([]byte, error) {
 }
 
 func (b *Buffer) GetBytes() []byte {
-	return b.buf
+	return b.buf[0:b.length]
 }
 
 func (b *Buffer) grow(n uint64) uint64 {
