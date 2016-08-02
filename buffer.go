@@ -33,6 +33,19 @@ func NewBufferWithLength(l uint64) *Buffer {
 	return b
 }
 
+func NewBufferWithBytes(bs []byte) *Buffer {
+	b := NewBuffer()
+	b.SetBytes(bs)
+	return b
+}
+
+func (b *Buffer) SetBytes(bs []byte) {
+	b.buf = bs
+	b.length = uint64(len(bs))
+	b.capacity = b.length
+	b.position = 0
+}
+
 func (b *Buffer) SetEndian(e Endian) {
 	if e == BigEndian {
 		b.endian = binary.BigEndian
