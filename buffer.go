@@ -231,6 +231,11 @@ func (b *Buffer) GetBytes() []byte {
 	return b.buf[0:b.length]
 }
 
+func (b *Buffer) Reset() {
+	b.position = 0
+	b.length = 0
+}
+
 func (b *Buffer) grow(n uint64) uint64 {
 	if b.length+n > uint64(cap(b.buf)) {
 		buf := make([]byte, (2*cap(b.buf) + int(n)))
