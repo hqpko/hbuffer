@@ -236,6 +236,11 @@ func (b *Buffer) Reset() {
 	b.length = 0
 }
 
+func (b *Buffer) Back(position uint64) {
+	b.position = position
+	b.length = position
+}
+
 func (b *Buffer) grow(n uint64) uint64 {
 	if b.length+n > uint64(cap(b.buf)) {
 		buf := make([]byte, (2*cap(b.buf) + int(n)))
