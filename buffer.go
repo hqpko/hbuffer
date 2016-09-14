@@ -73,6 +73,18 @@ func (b *Buffer) Len() uint64 {
 	return b.length
 }
 
+func (b *Buffer) WriteByte(bt byte) {
+	b.grow(1)
+	b.buf[b.position] = bt
+	b.position += 1
+}
+
+func (b *Buffer) WriteShort(i int) {
+	b.grow(2)
+	b.endian.PutUint16(b.buf[b.position:b.position+2], uint16(i))
+	b.position += 2
+}
+
 func (b *Buffer) WriteInt32(i int32) {
 	b.grow(4)
 	b.endian.PutUint32(b.buf[b.position:b.position+4], uint32(i))
@@ -134,6 +146,24 @@ func (b *Buffer) WriteString(s string) {
 	b.grow(l)
 	copy(b.buf[b.position:], s)
 	b.position += l
+}
+
+func (b *Buffer) ReadByte() (byte, error) {
+	if b.Available() == 0 {
+		return 0, ErrNotEnoughLength
+	}
+	c := b.buf[b.position]
+	b.position++
+	return c, nil
+}
+
+func (b *Buffer) ReadShort() (int, error) {
+	bs, err := b.ReadBytes(2)
+	if err != nil {
+		return 0, err
+	}
+	i := b.endian.Uint16(bs)
+	return int(i), nil
 }
 
 func (b *Buffer) ReadBool() (bool, error) {
