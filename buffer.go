@@ -3,6 +3,7 @@ package hbuffer
 import (
 	"encoding/binary"
 	"errors"
+	"io"
 	"math"
 )
 
@@ -244,6 +245,32 @@ func (b *Buffer) ReadBytes(size uint64) ([]byte, error) {
 	}
 	b.position += size
 	return b.buf[b.position-size : b.position], nil
+}
+
+func (b *Buffer) ReadBytesAtPosition(position uint64, size uint64) ([]byte, error) {
+	p := b.position
+	b.SetPosition(position)
+	bs, err := b.ReadBytes(size)
+	b.SetPosition(p)
+	return bs, err
+}
+
+func (b *Buffer) ReadAll(r io.Reader) error {
+	p := b.position
+	for {
+		b.grow(512)
+		m, e := r.Read(b.buf[b.position:cap(b.buf)])
+		b.position += uint64(m)
+		b.length = b.position
+		if e == io.EOF {
+			break
+		}
+		if e != nil {
+			return e
+		}
+	}
+	b.position = p
+	return nil
 }
 
 //CopyBytes copy bytes to new slice
