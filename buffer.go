@@ -2,12 +2,13 @@ package hbuffer
 
 import (
 	"encoding/binary"
-	"errors"
 	"io"
 	"math"
 )
 
-var ErrNotEnoughLength = errors.New("byte array not enough length.")
+const (
+	errNotEnoughLength = "byte array not enough length."
+)
 
 type Endian int
 
@@ -149,110 +150,83 @@ func (b *Buffer) WriteString(s string) {
 	b.position += l
 }
 
-func (b *Buffer) ReadByte() (byte, error) {
+func (b *Buffer) ReadByte() byte {
 	if b.Available() == 0 {
-		return 0, ErrNotEnoughLength
+		panic(errNotEnoughLength)
 	}
 	c := b.buf[b.position]
 	b.position++
-	return c, nil
+	return c
 }
 
-func (b *Buffer) ReadShort() (int, error) {
-	bs, err := b.ReadBytes(2)
-	if err != nil {
-		return 0, err
-	}
+func (b *Buffer) ReadShort() int {
+	bs := b.ReadBytes(2)
 	i := b.endian.Uint16(bs)
-	return int(i), nil
+	return int(i)
 }
 
-func (b *Buffer) ReadBool() (bool, error) {
+func (b *Buffer) ReadBool() bool {
 	if b.Available() == 0 {
-		return false, ErrNotEnoughLength
+		panic(errNotEnoughLength)
 	}
 	c := b.buf[b.position]
 	b.position++
-	return c == 1, nil
+	return c == 1
 }
 
-func (b *Buffer) ReadUint32() (uint32, error) {
-	bs, err := b.ReadBytes(4)
-	if err != nil {
-		return 0, err
-	}
+func (b *Buffer) ReadUint32() uint32 {
+	bs := b.ReadBytes(4)
 	i := b.endian.Uint32(bs)
-	return i, nil
+	return i
 }
 
-func (b *Buffer) ReadInt32() (int32, error) {
-	i, err := b.ReadUint32()
-	if err != nil {
-		return 0, err
-	}
-	return int32(i), err
+func (b *Buffer) ReadInt32() int32 {
+	i := b.ReadUint32()
+	return int32(i)
 }
 
-func (b *Buffer) ReadUint64() (uint64, error) {
-	bs, err := b.ReadBytes(8)
-	if err != nil {
-		return 0, err
-	}
+func (b *Buffer) ReadUint64() uint64 {
+	bs := b.ReadBytes(8)
 	i := b.endian.Uint64(bs)
-	return i, nil
+	return i
 }
 
-func (b *Buffer) ReadInt64() (int64, error) {
-	i, err := b.ReadUint64()
-	if err != nil {
-		return 0, err
-	}
-	return int64(i), nil
+func (b *Buffer) ReadInt64() int64 {
+	i := b.ReadUint64()
+	return int64(i)
 }
 
-func (b *Buffer) ReadFloat32() (float32, error) {
-	i, err := b.ReadUint32()
-	if err != nil {
-		return 0, err
-	}
-	return math.Float32frombits(i), nil
+func (b *Buffer) ReadFloat32() float32 {
+	i := b.ReadUint32()
+	return math.Float32frombits(i)
 }
 
-func (b *Buffer) ReadFloat64() (float64, error) {
-	i, err := b.ReadUint64()
-	if err != nil {
-		return 0, err
-	}
-	return math.Float64frombits(i), nil
+func (b *Buffer) ReadFloat64() float64 {
+	i := b.ReadUint64()
+	return math.Float64frombits(i)
 }
 
-func (b *Buffer) ReadString() (string, error) {
-	l, err := b.ReadUint64()
-	if err != nil {
-		return "", err
-	}
-	bs, err := b.ReadBytes(l)
-	if err != nil {
-		return "", err
-	}
-	return string(bs), nil
+func (b *Buffer) ReadString() string {
+	l := b.ReadUint64()
+	bs := b.ReadBytes(l)
+	return string(bs)
 }
 
 //ReadBytes read only bytes
-func (b *Buffer) ReadBytes(size uint64) ([]byte, error) {
+func (b *Buffer) ReadBytes(size uint64) []byte {
 	if b.Available() < size {
-		return nil, ErrNotEnoughLength
+		panic(errNotEnoughLength)
 	}
 	b.position += size
-	return b.buf[b.position-size : b.position], nil
+	return b.buf[b.position-size : b.position]
 }
 
-func (b *Buffer) ReadBytesAtPosition(position uint64, size uint64) ([]byte, error) {
+func (b *Buffer) ReadBytesAtPosition(position uint64, size uint64) []byte {
 	p := b.position
 	b.SetPosition(position)
-	bs, err := b.ReadBytes(size)
+	bs := b.ReadBytes(size)
 	b.SetPosition(p)
-	return bs, err
+	return bs
 }
 
 func (b *Buffer) ReadAll(r io.Reader) error {
@@ -274,14 +248,14 @@ func (b *Buffer) ReadAll(r io.Reader) error {
 }
 
 //CopyBytes copy bytes to new slice
-func (b *Buffer) CopyBytes(size uint64) ([]byte, error) {
+func (b *Buffer) CopyBytes(size uint64) []byte {
 	if b.Available() < size {
-		return nil, ErrNotEnoughLength
+		panic(errNotEnoughLength)
 	}
 	bs := make([]byte, size)
 	copy(bs, b.buf[b.position:b.position+size])
 	b.position += size
-	return bs, nil
+	return bs
 }
 
 func (b *Buffer) GetBytes() []byte {
