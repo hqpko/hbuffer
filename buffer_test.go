@@ -144,3 +144,20 @@ func TestBufferErrs(t *testing.T) {
 		})
 	})
 }
+
+func TestBufferDeleteBefor(t *testing.T) {
+	Convey("Check Buffer Funcs.", t, func() {
+		b := NewBuffer()
+		Convey("Check DeleteBefor.", func() {
+			b.WriteBytes([]byte{1, 2, 3})
+			b.DeleteBefor(2)
+			So(b.Len(), ShouldEqual, 1)
+			So(b.ReadByte(), ShouldEqual, 3)
+		})
+		Convey("Check DeleteBefor All.", func() {
+			b.WriteBytes([]byte{1, 2, 3})
+			b.DeleteBefor(5)
+			So(b.Len(), ShouldEqual, 0)
+		})
+	})
+}

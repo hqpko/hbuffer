@@ -272,6 +272,17 @@ func (b *Buffer) Back(position uint64) {
 	b.length = position
 }
 
+//DeleteBefor 删除 position 之前的数据
+func (b *Buffer) DeleteBefor(position uint64) {
+	if position >= b.length { //delete all
+		b.Reset()
+	} else {
+		copy(b.buf, b.buf[position:])
+		b.length = b.length - position
+		b.position = 0
+	}
+}
+
 func (b *Buffer) grow(n uint64) uint64 {
 	if b.length+n > uint64(cap(b.buf)) {
 		buf := make([]byte, (2*cap(b.buf) + int(n)))
