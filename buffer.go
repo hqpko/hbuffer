@@ -76,78 +76,73 @@ func (b *Buffer) Len() uint64 {
 }
 
 func (b *Buffer) WriteByte(bt byte) {
-	b.grow(1)
-	b.buf[b.position] = bt
-	b.position += 1
+	b.willWriteLen(1)
+	b.buf[b.position-1] = bt
 }
 
 func (b *Buffer) WriteShort(i int) {
-	b.grow(2)
-	b.endian.PutUint16(b.buf[b.position:b.position+2], uint16(i))
-	b.position += 2
+	b.willWriteLen(2)
+	b.endian.PutUint16(b.buf[b.position-2:], uint16(i))
 }
 
 func (b *Buffer) WriteInt32(i int32) {
-	b.grow(4)
-	b.endian.PutUint32(b.buf[b.position:b.position+4], uint32(i))
-	b.position += 4
+	b.willWriteLen(4)
+	b.endian.PutUint32(b.buf[b.position-4:], uint32(i))
 }
 
 func (b *Buffer) WriteUint32(i uint32) {
-	b.grow(4)
-	b.endian.PutUint32(b.buf[b.position:b.position+4], i)
-	b.position += 4
+	b.willWriteLen(4)
+	b.endian.PutUint32(b.buf[b.position-4:], i)
 }
 
 func (b *Buffer) WriteUint64(i uint64) {
-	b.grow(8)
-	b.endian.PutUint64(b.buf[b.position:b.position+8], i)
-	b.position += 8
+	b.willWriteLen(8)
+	b.endian.PutUint64(b.buf[b.position-8:], i)
 }
 
 func (b *Buffer) WriteInt64(i int64) {
-	b.grow(8)
-	b.endian.PutUint64(b.buf[b.position:b.position+8], uint64(i))
-	b.position += 8
+	b.willWriteLen(8)
+	b.endian.PutUint64(b.buf[b.position-8:], uint64(i))
 }
 
 func (b *Buffer) WriteFloat32(f float32) {
-	b.grow(4)
-	b.endian.PutUint32(b.buf[b.position:b.position+4], math.Float32bits(f))
-	b.position += 4
+	b.willWriteLen(4)
+	b.endian.PutUint32(b.buf[b.position-4:], math.Float32bits(f))
 }
 
 func (b *Buffer) WriteFloat64(f float64) {
-	b.grow(8)
-	b.endian.PutUint64(b.buf[b.position:b.position+8], math.Float64bits(f))
-	b.position += 8
+	b.willWriteLen(8)
+	b.endian.PutUint64(b.buf[b.position-8:], math.Float64bits(f))
 }
 
 func (b *Buffer) WriteBytes(bytes []byte) {
 	l := uint64(len(bytes))
-	b.grow(l)
-	copy(b.buf[b.position:], bytes)
-	b.position += l
+	b.willWriteLen(l)
+	copy(b.buf[b.position-l:], bytes)
 }
 
 func (b *Buffer) WriteBool(boo bool) {
 	if b.Available() < 1 {
-		b.grow(1)
+		b.willWriteLen(1)
 	}
 	if boo {
-		b.buf[b.position] = 1
+		b.buf[b.position-1] = 1
 	} else {
-		b.buf[b.position] = 0
+		b.buf[b.position-1] = 0
 	}
-	b.position++
 }
 
 func (b *Buffer) WriteString(s string) {
-	l := uint64(len(s))
-	b.WriteUint64(l)
+	b.WriteUint64(uint64(len(s)))
+	b.WriteBytes([]byte(s))
+}
+
+func (b *Buffer) willWriteLen(l uint64) {
 	b.grow(l)
-	copy(b.buf[b.position:], s)
 	b.position += l
+	if b.length < b.position {
+		b.length = b.position
+	}
 }
 
 func (b *Buffer) ReadByte() byte {
@@ -283,12 +278,10 @@ func (b *Buffer) DeleteBefor(position uint64) {
 	}
 }
 
-func (b *Buffer) grow(n uint64) uint64 {
+func (b *Buffer) grow(n uint64) {
 	if b.length+n > uint64(cap(b.buf)) {
 		buf := make([]byte, (2*cap(b.buf) + int(n)))
 		copy(buf, b.buf)
 		b.buf = buf
 	}
-	b.length += n
-	return b.length
 }
