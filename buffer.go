@@ -8,6 +8,8 @@ import (
 
 const (
 	errNotEnoughLength = "byte array not enough length."
+
+	stepReadLen = 1 << 8
 )
 
 type Endian int
@@ -225,12 +227,8 @@ func (b *Buffer) ReadBytesAtPosition(position uint64, size uint64) []byte {
 }
 
 func (b *Buffer) ReadAll(r io.Reader) error {
-	p := b.position
 	for {
-		b.grow(512)
-		m, e := r.Read(b.buf[b.position:cap(b.buf)])
-		b.position += uint64(m)
-		b.length = b.position
+		_, e := b.Read(r)
 		if e == io.EOF {
 			break
 		}
@@ -238,8 +236,17 @@ func (b *Buffer) ReadAll(r io.Reader) error {
 			return e
 		}
 	}
-	b.position = p
 	return nil
+}
+
+func (b *Buffer) Read(r io.Reader) (int, error) {
+	b.grow(stepReadLen)
+	n, e := r.Read(b.buf[b.position:])
+	if e != nil {
+		return 0, e
+	}
+	b.length += uint64(n)
+	return n, nil
 }
 
 //CopyBytes copy bytes to new slice
