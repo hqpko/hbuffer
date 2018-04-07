@@ -236,16 +236,24 @@ func (b *Buffer) ReadFull(r io.Reader, l uint64) (int, error) {
 	return n, e
 }
 
-//CopyBytes copy bytes to new slice
-func (b *Buffer) CopyBytes(size uint64) []byte {
-	bs := make([]byte, size)
-	copy(bs, b.buf[b.position:b.position+size])
-	b.position += size
+func (b *Buffer) GetBytes() []byte {
+	return b.buf[0:b.length]
+}
+
+func (b *Buffer) CopyBytes() []byte {
+	bs := make([]byte, b.length)
+	copy(bs, b.buf[:b.length])
 	return bs
 }
 
-func (b *Buffer) GetBytes() []byte {
-	return b.buf[0:b.length]
+func (b *Buffer) GetRestOfBytes() []byte {
+	return b.buf[b.position:b.length]
+}
+
+func (b *Buffer) CopyRestOfBytes() []byte {
+	bs := make([]byte, b.length-b.position)
+	copy(bs, b.buf[b.position:b.length])
+	return bs
 }
 
 func (b *Buffer) Reset() {
