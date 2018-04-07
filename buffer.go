@@ -7,8 +7,6 @@ import (
 )
 
 const (
-	errNotEnoughLength = "byte array not enough length."
-
 	stepReadLen = 1 << 8
 )
 
@@ -146,9 +144,6 @@ func (b *Buffer) willWriteLen(l uint64) {
 }
 
 func (b *Buffer) ReadByte() byte {
-	if b.Available() == 0 {
-		panic(errNotEnoughLength)
-	}
 	c := b.buf[b.position]
 	b.position++
 	return c
@@ -192,9 +187,6 @@ func (b *Buffer) ReadString() string {
 
 //ReadBytes read only bytes
 func (b *Buffer) ReadBytes(size uint64) []byte {
-	if b.Available() < size {
-		panic(errNotEnoughLength)
-	}
 	b.position += size
 	return b.buf[b.position-size : b.position]
 }
@@ -246,9 +238,6 @@ func (b *Buffer) ReadFull(r io.Reader, l uint64) (int, error) {
 
 //CopyBytes copy bytes to new slice
 func (b *Buffer) CopyBytes(size uint64) []byte {
-	if b.Available() < size {
-		panic(errNotEnoughLength)
-	}
 	bs := make([]byte, size)
 	copy(bs, b.buf[b.position:b.position+size])
 	b.position += size
