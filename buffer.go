@@ -245,7 +245,9 @@ func (b *Buffer) Read(r io.Reader) (int, error) {
 	if e != nil {
 		return 0, e
 	}
-	b.length += uint64(n)
+	if b.length < b.position+uint64(n) {
+		b.length = b.position + uint64(n)
+	}
 	return n, nil
 }
 
