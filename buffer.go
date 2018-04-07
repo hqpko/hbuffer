@@ -124,9 +124,7 @@ func (b *Buffer) WriteBytes(bytes []byte) {
 }
 
 func (b *Buffer) WriteBool(boo bool) {
-	if b.Available() < 1 {
-		b.willWriteLen(1)
-	}
+	b.willWriteLen(1)
 	if boo {
 		b.buf[b.position-1] = 1
 	} else {
@@ -157,56 +155,39 @@ func (b *Buffer) ReadByte() byte {
 }
 
 func (b *Buffer) ReadShort() int {
-	bs := b.ReadBytes(2)
-	i := b.endian.Uint16(bs)
-	return int(i)
+	return int(b.endian.Uint16(b.ReadBytes(2)))
 }
 
 func (b *Buffer) ReadBool() bool {
-	if b.Available() == 0 {
-		panic(errNotEnoughLength)
-	}
-	c := b.buf[b.position]
-	b.position++
-	return c == 1
+	return b.ReadByte() == 1
 }
 
 func (b *Buffer) ReadUint32() uint32 {
-	bs := b.ReadBytes(4)
-	i := b.endian.Uint32(bs)
-	return i
+	return b.endian.Uint32(b.ReadBytes(4))
 }
 
 func (b *Buffer) ReadInt32() int32 {
-	i := b.ReadUint32()
-	return int32(i)
+	return int32(b.ReadUint32())
 }
 
 func (b *Buffer) ReadUint64() uint64 {
-	bs := b.ReadBytes(8)
-	i := b.endian.Uint64(bs)
-	return i
+	return b.endian.Uint64(b.ReadBytes(8))
 }
 
 func (b *Buffer) ReadInt64() int64 {
-	i := b.ReadUint64()
-	return int64(i)
+	return int64(b.ReadUint64())
 }
 
 func (b *Buffer) ReadFloat32() float32 {
-	i := b.ReadUint32()
-	return math.Float32frombits(i)
+	return math.Float32frombits(b.ReadUint32())
 }
 
 func (b *Buffer) ReadFloat64() float64 {
-	i := b.ReadUint64()
-	return math.Float64frombits(i)
+	return math.Float64frombits(b.ReadUint64())
 }
 
 func (b *Buffer) ReadString() string {
-	l := b.ReadUint64()
-	bs := b.ReadBytes(l)
-	return string(bs)
+	return string(b.ReadBytes(b.ReadUint64()))
 }
 
 //ReadBytes read only bytes
