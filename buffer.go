@@ -251,6 +251,18 @@ func (b *Buffer) Read(r io.Reader) (int, error) {
 	return n, nil
 }
 
+func (b *Buffer) ReadFull(r io.Reader, l uint64) (int, error) {
+	b.grow(l)
+	n, e := io.ReadFull(r, b.buf[b.position:b.position+l])
+	if e != nil {
+		return n, e
+	}
+	if b.length < b.position+uint64(n) {
+		b.length = b.position + uint64(n)
+	}
+	return n, e
+}
+
 //CopyBytes copy bytes to new slice
 func (b *Buffer) CopyBytes(size uint64) []byte {
 	if b.Available() < size {
