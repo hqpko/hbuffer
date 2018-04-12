@@ -284,3 +284,7 @@ func (b *Buffer) grow(n uint64) {
 		b.buf = buf
 	}
 }
+
+func (b *Buffer) Cap() int {
+	return cap(b.buf)
+}
