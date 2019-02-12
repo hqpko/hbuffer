@@ -4,7 +4,7 @@
 go Buffer.
 使用方便、可复用
 
-```
+```go
 package main
 
 import (
@@ -25,32 +25,32 @@ func main() {
 	by.WriteFloat64(122.44)
 	by.WriteString("test_abc一二三")
 
-	//read from position 0
+	// read from position 0
 	by.SetPosition(0)
 
 	boo := by.ReadBool()
-	fmt.Println(boo) //true
+	fmt.Println(boo) // true
 
 	i32 := by.ReadInt32()
-	fmt.Println(i32) //123
+	fmt.Println(i32) // 123
 
 	i64 := by.ReadInt64()
-	fmt.Println(i64) //124
+	fmt.Println(i64) // 124
 
 	ui32 := by.ReadUint32()
-	fmt.Println(ui32) //125
+	fmt.Println(ui32) // 125
 
 	ui64 := by.ReadUint64()
-	fmt.Println(ui64) //126
+	fmt.Println(ui64) // 126
 
 	f32 := by.ReadFloat32()
-	fmt.Println(f32) //122.33
+	fmt.Println(f32) // 122.33
 
 	f64 := by.ReadFloat64()
-	fmt.Println(f64) //122.44
+	fmt.Println(f64) // 122.44
 
 	s := by.ReadString()
-	fmt.Println(s) //test_abc一二三
+	fmt.Println(s) // test_abc一二三
 }
 
 ```
