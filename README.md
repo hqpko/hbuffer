@@ -28,29 +28,29 @@ func main() {
 	//read from position 0
 	by.SetPosition(0)
 
-	boo, err := by.ReadBool()
-	fmt.Println(boo, err) //true,nil
+	boo := by.ReadBool()
+	fmt.Println(boo) //true
 
-	i32, err := by.ReadInt32()
-	fmt.Println(i32, err) //123,nil
+	i32 := by.ReadInt32()
+	fmt.Println(i32) //123
 
-	i64, err := by.ReadInt64()
-	fmt.Println(i64, err) //124,nil
+	i64 := by.ReadInt64()
+	fmt.Println(i64) //124
 
-	ui32, err := by.ReadUint32()
-	fmt.Println(ui32, err) //125,nil
+	ui32 := by.ReadUint32()
+	fmt.Println(ui32) //125
 
-	ui64, err := by.ReadUint64()
-	fmt.Println(ui64, err) //126,nil
+	ui64 := by.ReadUint64()
+	fmt.Println(ui64) //126
 
-	f32, err := by.ReadFloat32()
-	fmt.Println(f32, err) //122.33,nil
+	f32 := by.ReadFloat32()
+	fmt.Println(f32) //122.33
 
-	f64, err := by.ReadFloat64()
-	fmt.Println(f64, err) //122.44,nil
+	f64 := by.ReadFloat64()
+	fmt.Println(f64) //122.44
 
-	s, err := by.ReadString()
-	fmt.Println(s, err) //test_abc一二三,nil
+	s := by.ReadString()
+	fmt.Println(s) //test_abc一二三
 }
 
 ```

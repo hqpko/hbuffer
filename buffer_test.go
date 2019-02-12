@@ -145,7 +145,7 @@ func TestBufferErrs(t *testing.T) {
 	})
 }
 
-func TestBufferDeleteBefor(t *testing.T) {
+func TestBufferDeleteBefore(t *testing.T) {
 	Convey("Check Buffer Funcs.", t, func() {
 		b := NewBuffer()
 		Convey("Check DeleteBefor.", func() {
