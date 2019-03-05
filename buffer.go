@@ -185,7 +185,7 @@ func (b *Buffer) ReadString() string {
 	return string(b.ReadBytes(b.ReadUint64()))
 }
 
-//ReadBytes read only bytes
+// ReadBytes read only bytes
 func (b *Buffer) ReadBytes(size uint64) []byte {
 	b.position += size
 	return b.buf[b.position-size : b.position]
@@ -266,9 +266,8 @@ func (b *Buffer) Back(position uint64) {
 	b.length = position
 }
 
-//DeleteBefor 删除 position 之前的数据
-func (b *Buffer) DeleteBefor(position uint64) {
-	if position >= b.length { //delete all
+func (b *Buffer) DeleteBefore(position uint64) {
+	if position >= b.length { // delete all
 		b.Reset()
 	} else {
 		copy(b.buf, b.buf[position:])
@@ -279,7 +278,7 @@ func (b *Buffer) DeleteBefor(position uint64) {
 
 func (b *Buffer) grow(n uint64) {
 	if b.length+n > uint64(cap(b.buf)) {
-		buf := make([]byte, (2*cap(b.buf) + int(n)))
+		buf := make([]byte, 2*cap(b.buf)+int(n))
 		copy(buf, b.buf)
 		b.buf = buf
 	}

@@ -150,13 +150,13 @@ func TestBufferDeleteBefore(t *testing.T) {
 		b := NewBuffer()
 		Convey("Check DeleteBefor.", func() {
 			b.WriteBytes([]byte{1, 2, 3})
-			b.DeleteBefor(2)
+			b.DeleteBefore(2)
 			So(b.Len(), ShouldEqual, 1)
 			So(b.ReadByte(), ShouldEqual, 3)
 		})
 		Convey("Check DeleteBefor All.", func() {
 			b.WriteBytes([]byte{1, 2, 3})
-			b.DeleteBefor(5)
+			b.DeleteBefore(5)
 			So(b.Len(), ShouldEqual, 0)
 		})
 	})
