@@ -74,8 +74,8 @@ func TestBuffer(t *testing.T) {
 			b.SetPosition(0)
 			s := b.ReadString()
 			So(s, ShouldEqual, src)
-			So(b.GetPosition(), ShouldEqual, uint64(len(src)+8))
-			So(b.Len(), ShouldEqual, uint64(len(src)+8))
+			So(b.GetPosition(), ShouldEqual, len(src)+4)
+			So(b.Len(), ShouldEqual, len(src)+4)
 		})
 		Convey("Check Write & Get Bytes.", func() {
 			bytes := []byte{1, 2, 3, 4, 5}

@@ -136,7 +136,7 @@ func (b *Buffer) WriteBool(boo bool) {
 }
 
 func (b *Buffer) WriteString(s string) {
-	b.WriteUint64(uint64(len(s)))
+	b.WriteUint32(uint32(len(s)))
 	b.WriteBytes([]byte(s))
 }
 
@@ -187,7 +187,7 @@ func (b *Buffer) ReadFloat64() float64 {
 }
 
 func (b *Buffer) ReadString() string {
-	return string(b.ReadBytes(int(b.ReadUint64())))
+	return string(b.ReadBytes(int(b.ReadUint32())))
 }
 
 // ReadBytes read only bytes
