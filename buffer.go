@@ -137,7 +137,7 @@ func (b *Buffer) WriteBool(boo bool) {
 }
 
 func (b *Buffer) WriteString(s string) {
-	b.WriteUint32(uint32(len(s)))
+	b.writeStringLen(len(s))
 	b.WriteBytes([]byte(s))
 }
 
@@ -188,7 +188,25 @@ func (b *Buffer) ReadFloat64() float64 {
 }
 
 func (b *Buffer) ReadString() string {
-	return string(b.ReadBytes(int(b.ReadUint32())))
+	return string(b.ReadBytes(int(b.readStringLen())))
+}
+
+// from protobuf string
+func (b *Buffer) readStringLen() int {
+	l := int(b.ReadByte())
+	if l >= 128 {
+		l += (b.readStringLen() - 1) * 128
+	}
+	return l
+}
+
+func (b *Buffer) writeStringLen(l int) {
+	if n := l / 128; n > 0 {
+		b.WriteByte(byte(l%128) + 128)
+		b.writeStringLen(n)
+	} else {
+		b.WriteByte(byte(l))
+	}
 }
 
 // ReadBytes read only bytes

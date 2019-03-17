@@ -74,8 +74,8 @@ func TestBuffer(t *testing.T) {
 			b.SetPosition(0)
 			s := b.ReadString()
 			So(s, ShouldEqual, src)
-			So(b.GetPosition(), ShouldEqual, len(src)+4)
-			So(b.Len(), ShouldEqual, len(src)+4)
+			So(b.GetPosition(), ShouldEqual, len(src)+1)
+			So(b.Len(), ShouldEqual, len(src)+1)
 		})
 		Convey("Check Write & Get Bytes.", func() {
 			bytes := []byte{1, 2, 3, 4, 5}
@@ -159,7 +159,7 @@ func TestBufferErrs(t *testing.T) {
 				err := recover()
 				So(err, ShouldNotBeNil)
 			}()
-			b.ReadBytes(1)
+			b.ReadBytes(1 << 10)
 		})
 	})
 }
@@ -173,10 +173,37 @@ func TestBufferDeleteBefore(t *testing.T) {
 			So(b.Len(), ShouldEqual, 1)
 			So(b.ReadByte(), ShouldEqual, 3)
 		})
-		Convey("Check DeleteBefor All.", func() {
+		Convey("Check DeleteBefore All.", func() {
 			b.WriteBytes([]byte{1, 2, 3})
 			b.DeleteBefore(5)
 			So(b.Len(), ShouldEqual, 0)
+		})
+	})
+}
+
+func TestBufferString(t *testing.T) {
+	Convey("Test Buffer String Len ...", t, func() {
+		b := NewBuffer()
+		Convey("Test String Len < 128 ...", func() {
+			b.writeStringLen(127)
+			So(b.buf[0], ShouldEqual, 127)
+			b.SetPosition(0)
+			So(b.readStringLen(), ShouldEqual, 127)
+		})
+		Convey("Test String Len 255 ...", func() {
+			b.writeStringLen(255)
+			So(b.buf[0], ShouldEqual, 255)
+			So(b.buf[1], ShouldEqual, 1)
+			b.SetPosition(0)
+			So(b.readStringLen(), ShouldEqual, 255)
+		})
+		Convey("Test String Len 128 * 255 ...", func() {
+			b.writeStringLen(128 * 255)
+			So(b.buf[0], ShouldEqual, 128)
+			So(b.buf[1], ShouldEqual, 255)
+			So(b.buf[2], ShouldEqual, 1)
+			b.SetPosition(0)
+			So(b.readStringLen(), ShouldEqual, 128*255)
 		})
 	})
 }
