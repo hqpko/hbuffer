@@ -20,16 +20,16 @@ const (
 type Buffer struct {
 	buf      []byte
 	endian   binary.ByteOrder
-	position uint64
-	length   uint64
-	capacity uint64
+	position int
+	length   int
+	capacity int
 }
 
 func NewBuffer() *Buffer {
 	return &Buffer{buf: []byte{}, endian: binary.BigEndian}
 }
 
-func NewBufferWithLength(l uint64) *Buffer {
+func NewBufferWithLength(l int) *Buffer {
 	b := NewBuffer()
 	b.grow(l)
 	return b
@@ -43,7 +43,7 @@ func NewBufferWithBytes(bs []byte) *Buffer {
 
 func (b *Buffer) SetBytes(bs []byte) {
 	b.buf = bs
-	b.length = uint64(len(bs))
+	b.length = len(bs)
 	b.capacity = b.length
 	b.position = 0
 }
@@ -56,22 +56,22 @@ func (b *Buffer) SetEndian(e Endian) {
 	}
 }
 
-func (b *Buffer) SetPosition(position uint64) {
+func (b *Buffer) SetPosition(position int) {
 	if position > b.length {
 		position = b.length
 	}
 	b.position = position
 }
 
-func (b *Buffer) GetPosition() uint64 {
+func (b *Buffer) GetPosition() int {
 	return b.position
 }
 
-func (b *Buffer) Available() uint64 {
+func (b *Buffer) Available() int {
 	return b.length - b.position
 }
 
-func (b *Buffer) Len() uint64 {
+func (b *Buffer) Len() int {
 	return b.length
 }
 
@@ -121,7 +121,7 @@ func (b *Buffer) WriteFloat64(f float64) {
 }
 
 func (b *Buffer) WriteBytes(bytes []byte) {
-	l := uint64(len(bytes))
+	l := len(bytes)
 	b.willWriteLen(l)
 	copy(b.buf[b.position-l:], bytes)
 }
@@ -140,7 +140,7 @@ func (b *Buffer) WriteString(s string) {
 	b.WriteBytes([]byte(s))
 }
 
-func (b *Buffer) willWriteLen(l uint64) {
+func (b *Buffer) willWriteLen(l int) {
 	b.grow(l)
 	b.position += l
 	if b.length < b.position {
@@ -187,16 +187,16 @@ func (b *Buffer) ReadFloat64() float64 {
 }
 
 func (b *Buffer) ReadString() string {
-	return string(b.ReadBytes(b.ReadUint64()))
+	return string(b.ReadBytes(int(b.ReadUint64())))
 }
 
 // ReadBytes read only bytes
-func (b *Buffer) ReadBytes(size uint64) []byte {
+func (b *Buffer) ReadBytes(size int) []byte {
 	b.position += size
 	return b.buf[b.position-size : b.position]
 }
 
-func (b *Buffer) ReadBytesAtPosition(position uint64, size uint64) []byte {
+func (b *Buffer) ReadBytesAtPosition(position, size int) []byte {
 	p := b.position
 	b.SetPosition(position)
 	bs := b.ReadBytes(size)
@@ -205,7 +205,7 @@ func (b *Buffer) ReadBytesAtPosition(position uint64, size uint64) []byte {
 }
 
 func (b *Buffer) Read(bytes []byte) (int, error) {
-	l := uint64(len(bytes))
+	l := len(bytes)
 	available := b.Available()
 	if l > available {
 		copy(bytes, b.ReadBytes(available))
@@ -234,20 +234,20 @@ func (b *Buffer) ReadFromReader(r io.Reader) (int, error) {
 	if e != nil {
 		return 0, e
 	}
-	if b.length < b.position+uint64(n) {
-		b.length = b.position + uint64(n)
+	if b.length < b.position+n {
+		b.length = b.position + n
 	}
 	return n, nil
 }
 
-func (b *Buffer) ReadFull(r io.Reader, l uint64) (int, error) {
+func (b *Buffer) ReadFull(r io.Reader, l int) (int, error) {
 	b.grow(l)
 	n, e := io.ReadFull(r, b.buf[b.position:b.position+l])
 	if e != nil {
 		return n, e
 	}
-	if b.length < b.position+uint64(n) {
-		b.length = b.position + uint64(n)
+	if b.length < b.position+n {
+		b.length = b.position + n
 	}
 	return n, e
 }
@@ -277,12 +277,12 @@ func (b *Buffer) Reset() {
 	b.length = 0
 }
 
-func (b *Buffer) Back(position uint64) {
+func (b *Buffer) Back(position int) {
 	b.position = position
 	b.length = position
 }
 
-func (b *Buffer) DeleteBefore(position uint64) {
+func (b *Buffer) DeleteBefore(position int) {
 	if position >= b.length { // delete all
 		b.Reset()
 	} else {
@@ -292,8 +292,8 @@ func (b *Buffer) DeleteBefore(position uint64) {
 	}
 }
 
-func (b *Buffer) grow(n uint64) {
-	if b.length+n > uint64(cap(b.buf)) {
+func (b *Buffer) grow(n int) {
+	if b.length+n > cap(b.buf) {
 		buf := make([]byte, 2*cap(b.buf)+int(n))
 		copy(buf, b.buf)
 		b.buf = buf
