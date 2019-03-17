@@ -129,6 +129,25 @@ func TestBuffer(t *testing.T) {
 
 			So(s, ShouldEqual, "test_abc")
 		})
+
+		Convey("Check io.Writer & io.Reader", func() {
+			bytes := []byte{0, 1, 2, 3}
+			n, e := b.Write(bytes)
+			So(n, ShouldEqual, 4)
+			So(e, ShouldBeNil)
+
+			b.SetPosition(0)
+			newBytes := make([]byte, 2)
+			n, e = b.Read(newBytes)
+			So(n, ShouldEqual, len(newBytes))
+			So(e, ShouldBeNil)
+
+			b.SetPosition(0)
+			newBytes = make([]byte, 10)
+			n, e = b.Read(newBytes)
+			So(n, ShouldEqual, b.Len())
+			So(e, ShouldBeNil)
+		})
 	})
 }
 

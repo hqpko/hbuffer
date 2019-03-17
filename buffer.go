@@ -75,6 +75,11 @@ func (b *Buffer) Len() uint64 {
 	return b.length
 }
 
+func (b *Buffer) Write(bytes []byte) (int, error) {
+	b.WriteBytes(bytes)
+	return len(bytes), nil
+}
+
 func (b *Buffer) WriteByte(bt byte) {
 	b.willWriteLen(1)
 	b.buf[b.position-1] = bt
@@ -199,9 +204,20 @@ func (b *Buffer) ReadBytesAtPosition(position uint64, size uint64) []byte {
 	return bs
 }
 
+func (b *Buffer) Read(bytes []byte) (int, error) {
+	l := uint64(len(bytes))
+	available := b.Available()
+	if l > available {
+		copy(bytes, b.ReadBytes(available))
+		return int(available), nil
+	}
+	copy(bytes, b.ReadBytes(l))
+	return int(l), nil
+}
+
 func (b *Buffer) ReadAll(r io.Reader) error {
 	for {
-		_, e := b.Read(r)
+		_, e := b.ReadFromReader(r)
 		if e == io.EOF {
 			break
 		}
@@ -212,7 +228,7 @@ func (b *Buffer) ReadAll(r io.Reader) error {
 	return nil
 }
 
-func (b *Buffer) Read(r io.Reader) (int, error) {
+func (b *Buffer) ReadFromReader(r io.Reader) (int, error) {
 	b.grow(stepReadLen)
 	n, e := r.Read(b.buf[b.position:])
 	if e != nil {
