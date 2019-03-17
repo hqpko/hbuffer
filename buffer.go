@@ -8,6 +8,7 @@ import (
 
 const (
 	stepReadLen = 1 << 8
+	defInitLen  = 1 << 8
 )
 
 type Endian int
@@ -26,7 +27,7 @@ type Buffer struct {
 }
 
 func NewBuffer() *Buffer {
-	return &Buffer{buf: []byte{}, endian: binary.BigEndian}
+	return &Buffer{buf: make([]byte, defInitLen), endian: binary.BigEndian}
 }
 
 func NewBufferWithLength(l int) *Buffer {
@@ -293,8 +294,14 @@ func (b *Buffer) DeleteBefore(position int) {
 }
 
 func (b *Buffer) grow(n int) {
-	if b.length+n > cap(b.buf) {
-		buf := make([]byte, 2*cap(b.buf)+int(n))
+	need := b.length + n
+	capBuf := cap(b.buf)
+	if need > capBuf {
+		newCap := 2 * capBuf
+		for newCap < need {
+			newCap *= 2
+		}
+		buf := make([]byte, newCap)
 		copy(buf, b.buf)
 		b.buf = buf
 	}
