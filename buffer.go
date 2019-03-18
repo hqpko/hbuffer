@@ -2,6 +2,7 @@ package hbuffer
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"math"
 )
@@ -17,6 +18,8 @@ const (
 	BigEndian Endian = iota
 	LittleEndian
 )
+
+var errNoAvailableBytes = errors.New("buffer: no available bytes")
 
 type Buffer struct {
 	buf      []byte
@@ -149,10 +152,10 @@ func (b *Buffer) willWriteLen(l int) {
 	}
 }
 
-func (b *Buffer) ReadByte() byte {
+func (b *Buffer) ReadByte() (byte, error) {
 	c := b.buf[b.position]
 	b.position++
-	return c
+	return c, nil
 }
 
 func (b *Buffer) ReadShort() int {
@@ -160,7 +163,8 @@ func (b *Buffer) ReadShort() int {
 }
 
 func (b *Buffer) ReadBool() bool {
-	return b.ReadByte() == 1
+	bt, _ := b.ReadByte()
+	return bt == 1
 }
 
 func (b *Buffer) ReadUint32() uint32 {
@@ -193,7 +197,8 @@ func (b *Buffer) ReadString() string {
 
 // from protobuf string
 func (b *Buffer) readStringLen() int {
-	l := int(b.ReadByte())
+	bt, _ := b.ReadByte()
+	l := int(bt)
 	if l >= 128 {
 		l += (b.readStringLen() - 1) * 128
 	}

@@ -171,7 +171,8 @@ func TestBufferDeleteBefore(t *testing.T) {
 			b.WriteBytes([]byte{1, 2, 3})
 			b.DeleteBefore(2)
 			So(b.Len(), ShouldEqual, 1)
-			So(b.ReadByte(), ShouldEqual, 3)
+			bt, _ := b.ReadByte()
+			So(bt, ShouldEqual, 3)
 		})
 		Convey("Check DeleteBefore All.", func() {
 			b.WriteBytes([]byte{1, 2, 3})
