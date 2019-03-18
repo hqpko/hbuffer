@@ -23,39 +23,39 @@ func TestBuffer(t *testing.T) {
 		Convey("Check Write & Read Int32.", func() {
 			b.WriteInt32(133)
 			b.SetPosition(0)
-			i := b.ReadInt32()
+			i, _ := b.ReadInt32()
 			So(i, ShouldEqual, 133)
-			So(b.GetPosition(), ShouldEqual, 4)
-			So(b.Len(), ShouldEqual, 4)
+			So(b.GetPosition(), ShouldEqual, 2) // varint len
+			So(b.Len(), ShouldEqual, 2)
 		})
 		Convey("Check Write & Read Uint32.", func() {
 			b.WriteUint32(133)
 			b.SetPosition(0)
-			i := b.ReadUint32()
+			i, _ := b.ReadUint32()
 			So(i, ShouldEqual, 133)
-			So(b.GetPosition(), ShouldEqual, 4)
-			So(b.Len(), ShouldEqual, 4)
+			So(b.GetPosition(), ShouldEqual, 2)
+			So(b.Len(), ShouldEqual, 2)
 		})
 		Convey("Check Write & Read Uint64.", func() {
 			b.WriteUint64(133)
 			b.SetPosition(0)
-			i := b.ReadUint64()
+			i, _ := b.ReadUint64()
 			So(i, ShouldEqual, 133)
-			So(b.GetPosition(), ShouldEqual, 8)
-			So(b.Len(), ShouldEqual, 8)
+			So(b.GetPosition(), ShouldEqual, 2)
+			So(b.Len(), ShouldEqual, 2)
 		})
 		Convey("Check Write & Read Int64.", func() {
 			b.WriteInt64(133)
 			b.SetPosition(0)
-			i := b.ReadInt64()
+			i, _ := b.ReadInt64()
 			So(i, ShouldEqual, 133)
-			So(b.GetPosition(), ShouldEqual, 8)
-			So(b.Len(), ShouldEqual, 8)
+			So(b.GetPosition(), ShouldEqual, 2)
+			So(b.Len(), ShouldEqual, 2)
 		})
 		Convey("Check Write & Read Float32.", func() {
 			b.WriteFloat32(133.33)
 			b.SetPosition(0)
-			i := b.ReadFloat32()
+			i, _ := b.ReadFloat32()
 			So(i, ShouldEqual, 133.33)
 			So(b.GetPosition(), ShouldEqual, 4)
 			So(b.Len(), ShouldEqual, 4)
@@ -63,7 +63,7 @@ func TestBuffer(t *testing.T) {
 		Convey("Check Write & Read Float64.", func() {
 			b.WriteFloat64(133.33)
 			b.SetPosition(0)
-			i := b.ReadFloat64()
+			i, _ := b.ReadFloat64()
 			So(i, ShouldEqual, 133.33)
 			So(b.GetPosition(), ShouldEqual, 8)
 			So(b.Len(), ShouldEqual, 8)
@@ -72,7 +72,7 @@ func TestBuffer(t *testing.T) {
 			src := "test_abc一二三"
 			b.WriteString(src)
 			b.SetPosition(0)
-			s := b.ReadString()
+			s, _ := b.ReadString()
 			So(s, ShouldEqual, src)
 			So(b.GetPosition(), ShouldEqual, len(src)+1)
 			So(b.Len(), ShouldEqual, len(src)+1)
@@ -101,31 +101,31 @@ func TestBuffer(t *testing.T) {
 
 			So(boo, ShouldBeTrue)
 
-			i32 := b.ReadInt32()
+			i32, _ := b.ReadInt32()
 
 			So(i32, ShouldEqual, 123)
 
-			i64 := b.ReadInt64()
+			i64, _ := b.ReadInt64()
 
 			So(i64, ShouldEqual, 124)
 
-			ui32 := b.ReadUint32()
+			ui32, _ := b.ReadUint32()
 
 			So(ui32, ShouldEqual, 125)
 
-			ui64 := b.ReadUint64()
+			ui64, _ := b.ReadUint64()
 
 			So(ui64, ShouldEqual, 126)
 
-			f32 := b.ReadFloat32()
+			f32, _ := b.ReadFloat32()
 
 			So(f32, ShouldEqual, 122.33)
 
-			f64 := b.ReadFloat64()
+			f64, _ := b.ReadFloat64()
 
 			So(f64, ShouldEqual, 122.44)
 
-			s := b.ReadString()
+			s, _ := b.ReadString()
 
 			So(s, ShouldEqual, "test_abc")
 		})
@@ -155,11 +155,8 @@ func TestBufferErrs(t *testing.T) {
 	Convey("Check Buffer Funcs.", t, func() {
 		b := NewBuffer()
 		Convey("Check Read Bytes Err.", func() {
-			defer func() {
-				err := recover()
-				So(err, ShouldNotBeNil)
-			}()
-			b.ReadBytes(1 << 10)
+			_, e := b.ReadBytes(1 << 10)
+			So(e, ShouldNotBeNil)
 		})
 	})
 }
@@ -178,33 +175,6 @@ func TestBufferDeleteBefore(t *testing.T) {
 			b.WriteBytes([]byte{1, 2, 3})
 			b.DeleteBefore(5)
 			So(b.Len(), ShouldEqual, 0)
-		})
-	})
-}
-
-func TestBufferString(t *testing.T) {
-	Convey("Test Buffer String Len ...", t, func() {
-		b := NewBuffer()
-		Convey("Test String Len < 128 ...", func() {
-			b.writeStringLen(127)
-			So(b.buf[0], ShouldEqual, 127)
-			b.SetPosition(0)
-			So(b.readStringLen(), ShouldEqual, 127)
-		})
-		Convey("Test String Len 255 ...", func() {
-			b.writeStringLen(255)
-			So(b.buf[0], ShouldEqual, 255)
-			So(b.buf[1], ShouldEqual, 1)
-			b.SetPosition(0)
-			So(b.readStringLen(), ShouldEqual, 255)
-		})
-		Convey("Test String Len 128 * 255 ...", func() {
-			b.writeStringLen(128 * 255)
-			So(b.buf[0], ShouldEqual, 128)
-			So(b.buf[1], ShouldEqual, 255)
-			So(b.buf[2], ShouldEqual, 1)
-			b.SetPosition(0)
-			So(b.readStringLen(), ShouldEqual, 128*255)
 		})
 	})
 }

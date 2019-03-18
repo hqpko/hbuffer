@@ -89,29 +89,20 @@ func (b *Buffer) WriteByte(bt byte) {
 	b.buf[b.position-1] = bt
 }
 
-func (b *Buffer) WriteShort(i int) {
-	b.willWriteLen(2)
-	b.endian.PutUint16(b.buf[b.position-2:], uint16(i))
-}
-
 func (b *Buffer) WriteInt32(i int32) {
-	b.willWriteLen(4)
-	b.endian.PutUint32(b.buf[b.position-4:], uint32(i))
+	b.writeVarInt(int64(i))
 }
 
 func (b *Buffer) WriteUint32(i uint32) {
-	b.willWriteLen(4)
-	b.endian.PutUint32(b.buf[b.position-4:], i)
+	b.writeVarInt(int64(i))
 }
 
 func (b *Buffer) WriteUint64(i uint64) {
-	b.willWriteLen(8)
-	b.endian.PutUint64(b.buf[b.position-8:], i)
+	b.writeVarInt(int64(i))
 }
 
 func (b *Buffer) WriteInt64(i int64) {
-	b.willWriteLen(8)
-	b.endian.PutUint64(b.buf[b.position-8:], uint64(i))
+	b.writeVarInt(int64(i))
 }
 
 func (b *Buffer) WriteFloat32(f float32) {
@@ -140,7 +131,7 @@ func (b *Buffer) WriteBool(boo bool) {
 }
 
 func (b *Buffer) WriteString(s string) {
-	b.writeStringLen(len(s))
+	b.writeVarInt(int64(len(s)))
 	b.WriteBytes([]byte(s))
 }
 
@@ -152,14 +143,26 @@ func (b *Buffer) willWriteLen(l int) {
 	}
 }
 
+func (b *Buffer) growPosition(g int) {
+	b.position += g
+	if b.length < b.position {
+		b.length = b.position
+	}
+}
+
+func (b *Buffer) readVarInt() (int64, error) {
+	return binary.ReadVarint(b)
+}
+
+func (b *Buffer) writeVarInt(i int64) {
+	b.grow(binary.MaxVarintLen64)
+	b.growPosition(binary.PutVarint(b.buf[b.position:], i))
+}
+
 func (b *Buffer) ReadByte() (byte, error) {
 	c := b.buf[b.position]
 	b.position++
 	return c, nil
-}
-
-func (b *Buffer) ReadShort() int {
-	return int(b.endian.Uint16(b.ReadBytes(2)))
 }
 
 func (b *Buffer) ReadBool() bool {
@@ -167,76 +170,81 @@ func (b *Buffer) ReadBool() bool {
 	return bt == 1
 }
 
-func (b *Buffer) ReadUint32() uint32 {
-	return b.endian.Uint32(b.ReadBytes(4))
+func (b *Buffer) ReadUint32() (uint32, error) {
+	i, e := b.readVarInt()
+	return uint32(i), e
 }
 
-func (b *Buffer) ReadInt32() int32 {
-	return int32(b.ReadUint32())
+func (b *Buffer) ReadInt32() (int32, error) {
+	i, e := b.readVarInt()
+	return int32(i), e
 }
 
-func (b *Buffer) ReadUint64() uint64 {
-	return b.endian.Uint64(b.ReadBytes(8))
+func (b *Buffer) ReadUint64() (uint64, error) {
+	i, e := b.readVarInt()
+	return uint64(i), e
 }
 
-func (b *Buffer) ReadInt64() int64 {
-	return int64(b.ReadUint64())
+func (b *Buffer) ReadInt64() (int64, error) {
+	i, e := b.readVarInt()
+	return int64(i), e
 }
 
-func (b *Buffer) ReadFloat32() float32 {
-	return math.Float32frombits(b.ReadUint32())
-}
-
-func (b *Buffer) ReadFloat64() float64 {
-	return math.Float64frombits(b.ReadUint64())
-}
-
-func (b *Buffer) ReadString() string {
-	return string(b.ReadBytes(int(b.readStringLen())))
-}
-
-// from protobuf string
-func (b *Buffer) readStringLen() int {
-	bt, _ := b.ReadByte()
-	l := int(bt)
-	if l >= 128 {
-		l += (b.readStringLen() - 1) * 128
-	}
-	return l
-}
-
-func (b *Buffer) writeStringLen(l int) {
-	if n := l / 128; n > 0 {
-		b.WriteByte(byte(l%128) + 128)
-		b.writeStringLen(n)
+func (b *Buffer) ReadFloat32() (float32, error) {
+	if bt, e := b.ReadBytes(4); e != nil {
+		return 0, e
 	} else {
-		b.WriteByte(byte(l))
+		return math.Float32frombits(b.endian.Uint32(bt)), nil
+	}
+}
+
+func (b *Buffer) ReadFloat64() (float64, error) {
+	if bt, e := b.ReadBytes(8); e != nil {
+		return 0, e
+	} else {
+		return math.Float64frombits(b.endian.Uint64(bt)), nil
+	}
+}
+
+func (b *Buffer) ReadString() (string, error) {
+	if sz, e := b.readVarInt(); e != nil {
+		return "", e
+	} else if sb, e := b.ReadBytes(int(sz)); e != nil {
+		return "", e
+	} else {
+		return string(sb), nil
 	}
 }
 
 // ReadBytes read only bytes
-func (b *Buffer) ReadBytes(size int) []byte {
+func (b *Buffer) ReadBytes(size int) ([]byte, error) {
+	if b.Available() < size {
+		return nil, errNoAvailableBytes
+	}
 	b.position += size
-	return b.buf[b.position-size : b.position]
+	return b.buf[b.position-size : b.position], nil
 }
 
-func (b *Buffer) ReadBytesAtPosition(position, size int) []byte {
+func (b *Buffer) ReadBytesAtPosition(position, size int) ([]byte, error) {
 	p := b.position
 	b.SetPosition(position)
-	bs := b.ReadBytes(size)
+	bs, e := b.ReadBytes(size)
+	if e != nil {
+		return nil, e
+	}
 	b.SetPosition(p)
-	return bs
+	return bs, nil
 }
 
 func (b *Buffer) Read(bytes []byte) (int, error) {
-	l := len(bytes)
+	size := len(bytes)
 	available := b.Available()
-	if l > available {
-		copy(bytes, b.ReadBytes(available))
-		return int(available), nil
+	if size > available {
+		size = available
 	}
-	copy(bytes, b.ReadBytes(l))
-	return int(l), nil
+	bt, _ := b.ReadBytes(size)
+	copy(bytes, bt)
+	return size, nil
 }
 
 func (b *Buffer) ReadAll(r io.Reader) error {

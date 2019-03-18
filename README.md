@@ -31,25 +31,25 @@ func main() {
 	boo := by.ReadBool()
 	fmt.Println(boo) // true
 
-	i32 := by.ReadInt32()
+	i32,_ := by.ReadInt32()
 	fmt.Println(i32) // 123
 
-	i64 := by.ReadInt64()
+	i64,_ := by.ReadInt64()
 	fmt.Println(i64) // 124
 
-	ui32 := by.ReadUint32()
+	ui32,_ := by.ReadUint32()
 	fmt.Println(ui32) // 125
 
-	ui64 := by.ReadUint64()
+	ui64,_ := by.ReadUint64()
 	fmt.Println(ui64) // 126
 
-	f32 := by.ReadFloat32()
+	f32,_ := by.ReadFloat32()
 	fmt.Println(f32) // 122.33
 
-	f64 := by.ReadFloat64()
+	f64,_ := by.ReadFloat64()
 	fmt.Println(f64) // 122.44
 
-	s := by.ReadString()
+	s,_ := by.ReadString()
 	fmt.Println(s) // test_abc一二三
 }
 
