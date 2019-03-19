@@ -160,14 +160,17 @@ func (b *Buffer) writeVarInt(i int64) {
 }
 
 func (b *Buffer) ReadByte() (byte, error) {
+	if b.Available() < 1 {
+		return 0, errNoAvailableBytes
+	}
 	c := b.buf[b.position]
 	b.position++
 	return c, nil
 }
 
-func (b *Buffer) ReadBool() bool {
-	bt, _ := b.ReadByte()
-	return bt == 1
+func (b *Buffer) ReadBool() (bool, error) {
+	bt, err := b.ReadByte()
+	return bt == 1, err
 }
 
 func (b *Buffer) ReadUint32() (uint32, error) {

@@ -13,9 +13,9 @@ func TestBuffer(t *testing.T) {
 			b.WriteBool(true)
 			b.WriteBool(false)
 			b.SetPosition(0)
-			boo1 := b.ReadBool()
+			boo1, _ := b.ReadBool()
 			So(boo1, ShouldBeTrue)
-			boo2 := b.ReadBool()
+			boo2, _ := b.ReadBool()
 			So(boo2, ShouldBeFalse)
 			So(b.GetPosition(), ShouldEqual, 2)
 			So(b.Len(), ShouldEqual, 2)
@@ -97,7 +97,7 @@ func TestBuffer(t *testing.T) {
 			b.WriteString("test_abc")
 			b.SetPosition(0)
 
-			boo := b.ReadBool()
+			boo, _ := b.ReadBool()
 
 			So(boo, ShouldBeTrue)
 
