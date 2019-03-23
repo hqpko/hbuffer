@@ -76,17 +76,23 @@ func TestBuffer(t *testing.T) {
 	n, e := b.Write(bytes)
 	shouldEqual(n, len(bytes), t)
 	shouldEqual(e, nil, t)
-
 	b.SetPosition(0)
 	newBytes := make([]byte, 2)
 	n, e = b.Read(newBytes)
 	shouldEqual(n, len(newBytes), t)
 	shouldEqual(e, nil, t)
-
 	b.SetPosition(0)
 	newBytes = make([]byte, 10)
 	n, e = b.Read(newBytes)
 	shouldEqual(n, len(bytes), t)
+	shouldEqual(e, nil, t)
+
+	// read&write endian uint32
+	b.Reset()
+	b.WriteEndianUint32(133)
+	b.SetPosition(0)
+	u32, e = b.ReadEndianUint32()
+	shouldEqual(u32, uint32(133), t)
 	shouldEqual(e, nil, t)
 }
 
