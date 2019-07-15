@@ -35,7 +35,7 @@ func NewBuffer() *Buffer {
 
 func NewBufferWithLength(l int) *Buffer {
 	b := NewBuffer()
-	b.grow(l)
+	b.Grow(l)
 	return b
 }
 
@@ -141,7 +141,7 @@ func (b *Buffer) WriteString(s string) {
 }
 
 func (b *Buffer) willWriteLen(l int) {
-	b.grow(l)
+	b.Grow(l)
 	b.position += l
 	if b.length < b.position {
 		b.length = b.position
@@ -160,7 +160,7 @@ func (b *Buffer) readVarInt() (int64, error) {
 }
 
 func (b *Buffer) writeVarInt(i int64) {
-	b.grow(binary.MaxVarintLen64)
+	b.Grow(binary.MaxVarintLen64)
 	b.growPosition(binary.PutVarint(b.buf[b.position:], i))
 }
 
@@ -277,7 +277,7 @@ func (b *Buffer) ReadAll(r io.Reader) error {
 }
 
 func (b *Buffer) ReadFromReader(r io.Reader) (int, error) {
-	b.grow(stepReadLen)
+	b.Grow(stepReadLen)
 	n, e := r.Read(b.buf[b.position:])
 	if e != nil {
 		return 0, e
@@ -289,7 +289,7 @@ func (b *Buffer) ReadFromReader(r io.Reader) (int, error) {
 }
 
 func (b *Buffer) ReadFull(r io.Reader, l int) (int, error) {
-	b.grow(l)
+	b.Grow(l)
 	n, e := io.ReadFull(r, b.buf[b.position:b.position+l])
 	if e != nil {
 		return n, e
@@ -340,7 +340,7 @@ func (b *Buffer) DeleteBefore(position int) {
 	}
 }
 
-func (b *Buffer) grow(n int) {
+func (b *Buffer) Grow(n int) {
 	need := b.length + n
 	capBuf := cap(b.buf)
 	if need > capBuf {
