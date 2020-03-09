@@ -89,6 +89,10 @@ func (b *Buffer) WriteByte(bt byte) {
 	b.buf[b.position-1] = bt
 }
 
+func (b *Buffer) WriteInt(i int) {
+	b.writeVarInt(int64(i))
+}
+
 func (b *Buffer) WriteInt32(i int32) {
 	b.writeVarInt(int64(i))
 }
@@ -189,6 +193,11 @@ func (b *Buffer) ReadEndianUint32() (uint32, error) {
 	} else {
 		return b.endian.Uint32(bt), nil
 	}
+}
+
+func (b *Buffer) ReadInt() (int, error) {
+	i, e := b.readVarInt()
+	return int(i), e
 }
 
 func (b *Buffer) ReadInt32() (int32, error) {
