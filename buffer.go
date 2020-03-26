@@ -391,3 +391,80 @@ func (b *Buffer) Grow(n int) *Buffer {
 func (b *Buffer) Cap() int {
 	return cap(b.buf)
 }
+
+func Write(bytes []byte) (int, error) {
+	b := NewBuffer()
+	b.WriteBytes(bytes)
+	return len(bytes), nil
+}
+
+func WriteByte(bt byte) *Buffer {
+	b := NewBuffer()
+	b.willWriteLen(1)
+	b.buf[b.position-1] = bt
+	return b
+}
+
+func WriteInt(i int) *Buffer {
+	return NewBuffer().writeVarInt(int64(i))
+}
+
+func WriteInt32(i int32) *Buffer {
+	return NewBuffer().writeVarInt(int64(i))
+}
+
+func WriteUint32(i uint32) *Buffer {
+	return NewBuffer().writeVarInt(int64(i))
+}
+
+func WriteEndianUint32(i uint32) *Buffer {
+	b := NewBuffer()
+	b.willWriteLen(4)
+	b.endian.PutUint32(b.buf[b.position-4:], i)
+	return b
+}
+
+func WriteUint64(i uint64) *Buffer {
+	return NewBuffer().writeVarInt(int64(i))
+}
+
+func WriteInt64(i int64) *Buffer {
+	return NewBuffer().writeVarInt(int64(i))
+}
+
+func WriteFloat32(f float32) *Buffer {
+	b := NewBuffer()
+	b.willWriteLen(4)
+	b.endian.PutUint32(b.buf[b.position-4:], math.Float32bits(f))
+	return b
+}
+
+func WriteFloat64(f float64) *Buffer {
+	b := NewBuffer()
+	b.willWriteLen(8)
+	b.endian.PutUint64(b.buf[b.position-8:], math.Float64bits(f))
+	return b
+}
+
+func WriteBytes(bytes []byte) *Buffer {
+	b := NewBuffer()
+	l := len(bytes)
+	b.willWriteLen(l)
+	copy(b.buf[b.position-l:], bytes)
+	return b
+}
+
+func WriteBool(boo bool) *Buffer {
+	b := NewBuffer()
+	b.willWriteLen(1)
+	if boo {
+		b.buf[b.position-1] = 1
+	} else {
+		b.buf[b.position-1] = 0
+	}
+	return b
+}
+
+func WriteString(s string) *Buffer {
+	return NewBuffer().writeVarInt(int64(len(s))).WriteBytes([]byte(s))
+}
