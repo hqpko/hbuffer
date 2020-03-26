@@ -45,6 +45,18 @@ func NewBufferWithBytes(bs []byte) *Buffer {
 	return b
 }
 
+// NewBufferWithHead，新建带有 4 位长度 head 的 Buffer，head 用于存放除去 head 的数据长度
+func NewBufferWithHead() *Buffer {
+	return NewBuffer().WriteEndianUint32(0)
+}
+
+// UpdateHead 更新 head，设置 head 为此 buffer 实际携带的数据长度，即 buffer.length-4
+// 用于 BufferWithHead
+// 注意: updateHead 后，游标指在 head 后的第一位，一般在 updateHead 后不再继续写入数据
+func (b *Buffer) UpdateHead() *Buffer {
+	return b.SetPosition(0).WriteEndianUint32(uint32(b.length - 4))
+}
+
 func (b *Buffer) SetBytes(bs []byte) *Buffer {
 	b.buf = bs
 	b.length = len(bs)
