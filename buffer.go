@@ -45,26 +45,29 @@ func NewBufferWithBytes(bs []byte) *Buffer {
 	return b
 }
 
-func (b *Buffer) SetBytes(bs []byte) {
+func (b *Buffer) SetBytes(bs []byte) *Buffer {
 	b.buf = bs
 	b.length = len(bs)
 	b.capacity = b.length
 	b.position = 0
+	return b
 }
 
-func (b *Buffer) SetEndian(e Endian) {
+func (b *Buffer) SetEndian(e Endian) *Buffer {
 	if e == BigEndian {
 		b.endian = binary.BigEndian
 	} else {
 		b.endian = binary.LittleEndian
 	}
+	return b
 }
 
-func (b *Buffer) SetPosition(position int) {
+func (b *Buffer) SetPosition(position int) *Buffer {
 	if position > b.length {
 		position = b.length
 	}
 	b.position = position
+	return b
 }
 
 func (b *Buffer) GetPosition() int {
@@ -84,64 +87,69 @@ func (b *Buffer) Write(bytes []byte) (int, error) {
 	return len(bytes), nil
 }
 
-func (b *Buffer) WriteByte(bt byte) {
+func (b *Buffer) WriteByte(bt byte) *Buffer {
 	b.willWriteLen(1)
 	b.buf[b.position-1] = bt
+	return b
 }
 
-func (b *Buffer) WriteInt(i int) {
-	b.writeVarInt(int64(i))
+func (b *Buffer) WriteInt(i int) *Buffer {
+	return b.writeVarInt(int64(i))
 }
 
-func (b *Buffer) WriteInt32(i int32) {
-	b.writeVarInt(int64(i))
+func (b *Buffer) WriteInt32(i int32) *Buffer {
+	return b.writeVarInt(int64(i))
 }
 
-func (b *Buffer) WriteUint32(i uint32) {
-	b.writeVarInt(int64(i))
+func (b *Buffer) WriteUint32(i uint32) *Buffer {
+	return b.writeVarInt(int64(i))
 }
 
-func (b *Buffer) WriteEndianUint32(i uint32) {
+func (b *Buffer) WriteEndianUint32(i uint32) *Buffer {
 	b.willWriteLen(4)
 	b.endian.PutUint32(b.buf[b.position-4:], i)
+	return b
 }
 
-func (b *Buffer) WriteUint64(i uint64) {
-	b.writeVarInt(int64(i))
+func (b *Buffer) WriteUint64(i uint64) *Buffer {
+	return b.writeVarInt(int64(i))
 }
 
-func (b *Buffer) WriteInt64(i int64) {
-	b.writeVarInt(int64(i))
+func (b *Buffer) WriteInt64(i int64) *Buffer {
+	return b.writeVarInt(int64(i))
 }
 
-func (b *Buffer) WriteFloat32(f float32) {
+func (b *Buffer) WriteFloat32(f float32) *Buffer {
 	b.willWriteLen(4)
 	b.endian.PutUint32(b.buf[b.position-4:], math.Float32bits(f))
+	return b
 }
 
-func (b *Buffer) WriteFloat64(f float64) {
+func (b *Buffer) WriteFloat64(f float64) *Buffer {
 	b.willWriteLen(8)
 	b.endian.PutUint64(b.buf[b.position-8:], math.Float64bits(f))
+	return b
 }
 
-func (b *Buffer) WriteBytes(bytes []byte) {
+func (b *Buffer) WriteBytes(bytes []byte) *Buffer {
 	l := len(bytes)
 	b.willWriteLen(l)
 	copy(b.buf[b.position-l:], bytes)
+	return b
 }
 
-func (b *Buffer) WriteBool(boo bool) {
+func (b *Buffer) WriteBool(boo bool) *Buffer {
 	b.willWriteLen(1)
 	if boo {
 		b.buf[b.position-1] = 1
 	} else {
 		b.buf[b.position-1] = 0
 	}
+	return b
 }
 
-func (b *Buffer) WriteString(s string) {
-	b.writeVarInt(int64(len(s)))
-	b.WriteBytes([]byte(s))
+func (b *Buffer) WriteString(s string) *Buffer {
+	return b.writeVarInt(int64(len(s))).WriteBytes([]byte(s))
 }
 
 func (b *Buffer) willWriteLen(l int) {
@@ -152,20 +160,21 @@ func (b *Buffer) willWriteLen(l int) {
 	}
 }
 
-func (b *Buffer) growPosition(g int) {
+func (b *Buffer) growPosition(g int) *Buffer {
 	b.position += g
 	if b.length < b.position {
 		b.length = b.position
 	}
+	return b
 }
 
 func (b *Buffer) readVarInt() (int64, error) {
 	return binary.ReadVarint(b)
 }
 
-func (b *Buffer) writeVarInt(i int64) {
+func (b *Buffer) writeVarInt(i int64) *Buffer {
 	b.Grow(binary.MaxVarintLen64)
-	b.growPosition(binary.PutVarint(b.buf[b.position:], i))
+	return b.growPosition(binary.PutVarint(b.buf[b.position:], i))
 }
 
 func (b *Buffer) ReadByte() (byte, error) {
@@ -329,17 +338,19 @@ func (b *Buffer) CopyRestOfBytes() []byte {
 	return bs
 }
 
-func (b *Buffer) Reset() {
+func (b *Buffer) Reset() *Buffer {
 	b.position = 0
 	b.length = 0
+	return b
 }
 
-func (b *Buffer) Back(position int) {
+func (b *Buffer) Back(position int) *Buffer {
 	b.position = position
 	b.length = position
+	return b
 }
 
-func (b *Buffer) DeleteBefore(position int) {
+func (b *Buffer) DeleteBefore(position int) *Buffer {
 	if position >= b.length { // delete all
 		b.Reset()
 	} else {
@@ -347,9 +358,10 @@ func (b *Buffer) DeleteBefore(position int) {
 		b.length = b.length - position
 		b.position = 0
 	}
+	return b
 }
 
-func (b *Buffer) Grow(n int) {
+func (b *Buffer) Grow(n int) *Buffer {
 	need := b.length + n
 	capBuf := cap(b.buf)
 	if need > capBuf {
@@ -361,6 +373,7 @@ func (b *Buffer) Grow(n int) {
 		copy(buf, b.buf)
 		b.buf = buf
 	}
+	return b
 }
 
 func (b *Buffer) Cap() int {
