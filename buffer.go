@@ -34,15 +34,11 @@ func NewBuffer() *Buffer {
 }
 
 func NewBufferWithLength(l int) *Buffer {
-	b := NewBuffer()
-	b.Grow(l)
-	return b
+	return NewBuffer().Grow(l)
 }
 
 func NewBufferWithBytes(bs []byte) *Buffer {
-	b := NewBuffer()
-	b.SetBytes(bs)
-	return b
+	return NewBuffer().SetBytes(bs)
 }
 
 // NewBufferWithHead，新建带有 4 位长度 head 的 Buffer，head 用于存放除去 head 的数据长度
