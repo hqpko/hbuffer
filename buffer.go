@@ -157,7 +157,7 @@ func (b *Buffer) WriteBool(boo bool) *Buffer {
 }
 
 func (b *Buffer) WriteString(s string) *Buffer {
-	return b.writeVarInt(int64(len(s))).WriteBytes([]byte(s))
+	return b.WriteUint32(uint32(len(s))).WriteBytes([]byte(s))
 }
 
 func (b *Buffer) willWriteLen(l int) {
@@ -256,7 +256,7 @@ func (b *Buffer) ReadFloat64() (float64, error) {
 }
 
 func (b *Buffer) ReadString() (string, error) {
-	if sz, e := b.readVarInt(); e != nil {
+	if sz, e := b.ReadUint32(); e != nil {
 		return "", e
 	} else if sb, e := b.ReadBytes(int(sz)); e != nil {
 		return "", e
