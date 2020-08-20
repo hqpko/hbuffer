@@ -110,7 +110,7 @@ func (b *Buffer) WriteInt32(i int32) *Buffer {
 }
 
 func (b *Buffer) WriteUint32(i uint32) *Buffer {
-	return b.writeVarInt(int64(i))
+	return b.writeUvarInt(uint64(i))
 }
 
 func (b *Buffer) WriteEndianUint32(i uint32) *Buffer {
@@ -120,11 +120,11 @@ func (b *Buffer) WriteEndianUint32(i uint32) *Buffer {
 }
 
 func (b *Buffer) WriteUint64(i uint64) *Buffer {
-	return b.writeVarInt(int64(i))
+	return b.writeUvarInt(i)
 }
 
 func (b *Buffer) WriteInt64(i int64) *Buffer {
-	return b.writeVarInt(int64(i))
+	return b.writeVarInt(i)
 }
 
 func (b *Buffer) WriteFloat32(f float32) *Buffer {
@@ -180,9 +180,18 @@ func (b *Buffer) readVarInt() (int64, error) {
 	return binary.ReadVarint(b)
 }
 
+func (b *Buffer) readUvarint() (uint64, error) {
+	return binary.ReadUvarint(b)
+}
+
 func (b *Buffer) writeVarInt(i int64) *Buffer {
 	b.Grow(binary.MaxVarintLen64)
 	return b.growPosition(binary.PutVarint(b.buf[b.position:], i))
+}
+
+func (b *Buffer) writeUvarInt(i uint64) *Buffer {
+	b.Grow(binary.MaxVarintLen64)
+	return b.growPosition(binary.PutUvarint(b.buf[b.position:], i))
 }
 
 func (b *Buffer) ReadByte() (byte, error) {
@@ -200,7 +209,7 @@ func (b *Buffer) ReadBool() (bool, error) {
 }
 
 func (b *Buffer) ReadUint32() (uint32, error) {
-	i, e := b.readVarInt()
+	i, e := b.readUvarint()
 	return uint32(i), e
 }
 
@@ -223,13 +232,11 @@ func (b *Buffer) ReadInt32() (int32, error) {
 }
 
 func (b *Buffer) ReadUint64() (uint64, error) {
-	i, e := b.readVarInt()
-	return uint64(i), e
+	return b.readUvarint()
 }
 
 func (b *Buffer) ReadInt64() (int64, error) {
-	i, e := b.readVarInt()
-	return int64(i), e
+	return b.readVarInt()
 }
 
 func (b *Buffer) ReadFloat32() (float32, error) {
