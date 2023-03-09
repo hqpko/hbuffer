@@ -34,23 +34,23 @@ func NewBuffer() *Buffer {
 }
 
 func NewBufferWithLength(l int) *Buffer {
-	return NewBuffer().Grow(l)
+	return &Buffer{buf: make([]byte, l), endian: binary.BigEndian}
 }
 
 func NewBufferWithBytes(bs []byte) *Buffer {
-	return NewBuffer().SetBytes(bs)
+	return (&Buffer{endian: binary.BigEndian}).SetBytes(bs)
 }
 
-// NewBufferWithHead，新建带有 4 位长度 head 的 Buffer，head 用于存放除去 head 的数据长度
+// NewBufferWithHead 新建带有 4 位长度 head 的 Buffer，head 用于存放除去 head 的数据长度
 func NewBufferWithHead() *Buffer {
-	return NewBuffer().WriteEndianUint32(0)
+	return NewBuffer().WriteUint32(0)
 }
 
 // UpdateHead 更新 head，设置 head 为此 buffer 实际携带的数据长度，即 buffer.length-4
 // 用于 BufferWithHead
 // 注意: updateHead 后，游标指在 head 后的第一位，一般在 updateHead 后不再继续写入数据
 func (b *Buffer) UpdateHead() *Buffer {
-	return b.SetPosition(0).WriteEndianUint32(uint32(b.length - 4))
+	return b.SetPosition(0).WriteUint32(uint32(b.length - 4))
 }
 
 func (b *Buffer) SetBytes(bs []byte) *Buffer {
@@ -95,36 +95,65 @@ func (b *Buffer) Write(bytes []byte) (int, error) {
 	return len(bytes), nil
 }
 
-func (b *Buffer) WriteByte(bt byte) *Buffer {
+func (b *Buffer) WriteByte(bt byte) error {
 	b.willWriteLen(1)
 	b.buf[b.position-1] = bt
-	return b
+	return nil
+}
+
+func (b *Buffer) WriteShort(i int) {
+	b.willWriteLen(2)
+	b.endian.PutUint16(b.buf[b.position-2:], uint16(i))
 }
 
 func (b *Buffer) WriteInt(i int) *Buffer {
-	return b.writeVarInt(int64(i))
+	b.willWriteLen(4)
+	b.endian.PutUint32(b.buf[b.position-4:], uint32(i))
+	return b
 }
 
 func (b *Buffer) WriteInt32(i int32) *Buffer {
-	return b.writeVarInt(int64(i))
+	b.willWriteLen(4)
+	b.endian.PutUint32(b.buf[b.position-4:], uint32(i))
+	return b
 }
 
 func (b *Buffer) WriteUint32(i uint32) *Buffer {
-	return b.writeUvarInt(uint64(i))
-}
-
-func (b *Buffer) WriteEndianUint32(i uint32) *Buffer {
 	b.willWriteLen(4)
 	b.endian.PutUint32(b.buf[b.position-4:], i)
 	return b
 }
 
-func (b *Buffer) WriteUint64(i uint64) *Buffer {
-	return b.writeUvarInt(i)
+func (b *Buffer) WriteInt64(i int64) *Buffer {
+	b.willWriteLen(8)
+	b.endian.PutUint64(b.buf[b.position-8:], uint64(i))
+	return b
 }
 
-func (b *Buffer) WriteInt64(i int64) *Buffer {
+func (b *Buffer) WriteUint64(i uint64) *Buffer {
+	b.willWriteLen(8)
+	b.endian.PutUint64(b.buf[b.position-8:], i)
+	return b
+}
+
+func (b *Buffer) WriteVarInt(i int) *Buffer {
+	return b.writeVarInt(int64(i))
+}
+
+func (b *Buffer) WriteVarInt32(i int32) *Buffer {
+	return b.writeVarInt(int64(i))
+}
+
+func (b *Buffer) WriteVarUint32(i uint32) *Buffer {
+	return b.writeVarUint(uint64(i))
+}
+
+func (b *Buffer) WriteVarInt64(i int64) *Buffer {
 	return b.writeVarInt(i)
+}
+
+func (b *Buffer) WriteVarUint64(i uint64) *Buffer {
+	return b.writeVarUint(i)
 }
 
 func (b *Buffer) WriteFloat32(f float32) *Buffer {
@@ -157,7 +186,7 @@ func (b *Buffer) WriteBool(boo bool) *Buffer {
 }
 
 func (b *Buffer) WriteString(s string) *Buffer {
-	return b.WriteUint32(uint32(len(s))).WriteBytes([]byte(s))
+	return b.WriteVarUint32(uint32(len(s))).WriteBytes([]byte(s))
 }
 
 func (b *Buffer) willWriteLen(l int) {
@@ -180,7 +209,7 @@ func (b *Buffer) readVarInt() (int64, error) {
 	return binary.ReadVarint(b)
 }
 
-func (b *Buffer) readUvarint() (uint64, error) {
+func (b *Buffer) readVarUint() (uint64, error) {
 	return binary.ReadUvarint(b)
 }
 
@@ -189,7 +218,7 @@ func (b *Buffer) writeVarInt(i int64) *Buffer {
 	return b.growPosition(binary.PutVarint(b.buf[b.position:], i))
 }
 
-func (b *Buffer) writeUvarInt(i uint64) *Buffer {
+func (b *Buffer) writeVarUint(i uint64) *Buffer {
 	b.Grow(binary.MaxVarintLen64)
 	return b.growPosition(binary.PutUvarint(b.buf[b.position:], i))
 }
@@ -204,16 +233,29 @@ func (b *Buffer) ReadByte() (byte, error) {
 }
 
 func (b *Buffer) ReadBool() (bool, error) {
-	bt, err := b.ReadByte()
-	return bt == 1, err
+	bt, e := b.ReadByte()
+	return bt == 1, e
+}
+
+func (b *Buffer) ReadShort() (int, error) {
+	if bt, e := b.ReadBytes(4); e != nil {
+		return 0, e
+	} else {
+		return int(b.endian.Uint16(bt)), nil
+	}
+}
+
+func (b *Buffer) ReadInt() (int, error) {
+	i, e := b.ReadUint32()
+	return int(i), e
+}
+
+func (b *Buffer) ReadInt32() (int32, error) {
+	i, e := b.ReadUint32()
+	return int32(i), e
 }
 
 func (b *Buffer) ReadUint32() (uint32, error) {
-	i, e := b.readUvarint()
-	return uint32(i), e
-}
-
-func (b *Buffer) ReadEndianUint32() (uint32, error) {
 	if bt, e := b.ReadBytes(4); e != nil {
 		return 0, e
 	} else {
@@ -221,22 +263,40 @@ func (b *Buffer) ReadEndianUint32() (uint32, error) {
 	}
 }
 
-func (b *Buffer) ReadInt() (int, error) {
+func (b *Buffer) ReadInt64() (int64, error) {
+	i, e := b.ReadUint64()
+	return int64(i), e
+}
+
+func (b *Buffer) ReadUint64() (uint64, error) {
+	if bt, e := b.ReadBytes(8); e != nil {
+		return 0, e
+	} else {
+		return b.endian.Uint64(bt), nil
+	}
+}
+
+func (b *Buffer) ReadVarInt() (int, error) {
 	i, e := b.readVarInt()
 	return int(i), e
 }
 
-func (b *Buffer) ReadInt32() (int32, error) {
+func (b *Buffer) ReadVarInt32() (int32, error) {
 	i, e := b.readVarInt()
 	return int32(i), e
 }
 
-func (b *Buffer) ReadUint64() (uint64, error) {
-	return b.readUvarint()
+func (b *Buffer) ReadVarUint32() (uint32, error) {
+	i, e := b.readVarUint()
+	return uint32(i), e
 }
 
-func (b *Buffer) ReadInt64() (int64, error) {
+func (b *Buffer) ReadVarInt64() (int64, error) {
 	return b.readVarInt()
+}
+
+func (b *Buffer) ReadVarUint64() (uint64, error) {
+	return b.readVarUint()
 }
 
 func (b *Buffer) ReadFloat32() (float32, error) {
@@ -256,7 +316,7 @@ func (b *Buffer) ReadFloat64() (float64, error) {
 }
 
 func (b *Buffer) ReadString() (string, error) {
-	if sz, e := b.ReadUint32(); e != nil {
+	if sz, e := b.ReadVarUint32(); e != nil {
 		return "", e
 	} else if sb, e := b.ReadBytes(int(sz)); e != nil {
 		return "", e
@@ -393,52 +453,4 @@ func (b *Buffer) Grow(n int) *Buffer {
 
 func (b *Buffer) Cap() int {
 	return cap(b.buf)
-}
-
-func WriteByte(bt byte) *Buffer {
-	return NewBuffer().WriteByte(bt)
-}
-
-func WriteInt(i int) *Buffer {
-	return NewBuffer().WriteInt(i)
-}
-
-func WriteInt32(i int32) *Buffer {
-	return NewBuffer().WriteInt32(i)
-}
-
-func WriteUint32(i uint32) *Buffer {
-	return NewBuffer().WriteUint32(i)
-}
-
-func WriteEndianUint32(i uint32) *Buffer {
-	return NewBuffer().WriteEndianUint32(i)
-}
-
-func WriteUint64(i uint64) *Buffer {
-	return NewBuffer().WriteUint64(i)
-}
-
-func WriteInt64(i int64) *Buffer {
-	return NewBuffer().WriteInt64(i)
-}
-
-func WriteFloat32(f float32) *Buffer {
-	return NewBuffer().WriteFloat32(f)
-}
-
-func WriteFloat64(f float64) *Buffer {
-	return NewBuffer().WriteFloat64(f)
-}
-
-func WriteBytes(bytes []byte) *Buffer {
-	return NewBuffer().WriteBytes(bytes)
-}
-
-func WriteBool(boo bool) *Buffer {
-	return NewBuffer().WriteBool(boo)
-}
-
-func WriteString(s string) *Buffer {
-	return NewBuffer().WriteString(s)
 }

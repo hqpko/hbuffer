@@ -1,6 +1,7 @@
 package hbuffer
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ func TestBuffer(t *testing.T) {
 	shouldEqual(i32, int32(133), t)
 
 	// read&write uint32
-	b.WriteUint64(133)
+	b.WriteUint32(133)
 	b.SetPosition(0)
 	u32, _ := b.ReadUint32()
 	shouldEqual(u32, uint32(133), t)
@@ -41,8 +42,36 @@ func TestBuffer(t *testing.T) {
 	b.Reset()
 	b.WriteUint64(133)
 	b.SetPosition(0)
-	u64, _ := b.ReadUint32()
-	shouldEqual(u64, uint32(133), t)
+	u64, _ := b.ReadUint64()
+	shouldEqual(u64, uint64(133), t)
+
+	// read&write var int32
+	b.Reset()
+	b.WriteVarInt32(133)
+	b.SetPosition(0)
+	vi32, _ := b.ReadVarInt32()
+	shouldEqual(vi32, int32(133), t)
+
+	// read&write var uint32
+	b.Reset()
+	b.WriteVarUint64(133)
+	b.SetPosition(0)
+	vu32, _ := b.ReadVarUint32()
+	shouldEqual(vu32, uint32(133), t)
+
+	// read&write var int64
+	b.Reset()
+	b.WriteVarInt64(133)
+	b.SetPosition(0)
+	vi64, _ := b.ReadVarInt64()
+	shouldEqual(vi64, int64(133), t)
+
+	// read&write var uint64
+	b.Reset()
+	b.WriteVarUint64(133)
+	b.SetPosition(0)
+	vu64, _ := b.ReadVarUint64()
+	shouldEqual(vu64, uint64(133), t)
 
 	// read&write float32
 	b.Reset()
@@ -86,14 +115,6 @@ func TestBuffer(t *testing.T) {
 	n, e = b.Read(newBytes)
 	shouldEqual(n, len(bytes), t)
 	shouldEqual(e, nil, t)
-
-	// read&write endian uint32
-	b.Reset()
-	b.WriteEndianUint32(133)
-	b.SetPosition(0)
-	u32, e = b.ReadEndianUint32()
-	shouldEqual(u32, uint32(133), t)
-	shouldEqual(e, nil, t)
 }
 
 func TestBufferErrs(t *testing.T) {
@@ -110,7 +131,8 @@ func shouldBeBool(b, equal bool, t *testing.T) {
 
 func shouldEqual(a, b interface{}, t *testing.T) {
 	if a != b {
-		t.Fatalf("%v != %v", a, b)
+		panic(fmt.Sprintf("%v != %v", a, b))
+		//t.Fatalf("%v != %v", a, b)
 	}
 }
 
