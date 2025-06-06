@@ -372,13 +372,13 @@ func (b *Buffer) ReadAll(r io.Reader) error {
 func (b *Buffer) ReadFromReader(r io.Reader) (int, error) {
 	b.Grow(stepReadLen)
 	n, e := r.Read(b.buf[b.position:])
-	if e != nil {
-		return 0, e
+	if n > 0 {
+		b.position += n
+		if b.length < b.position {
+			b.length = b.position
+		}
 	}
-	if b.length < b.position+n {
-		b.length = b.position + n
-	}
-	return n, nil
+	return n, e
 }
 
 func (b *Buffer) ReadFull(r io.Reader, l int) (int, error) {
